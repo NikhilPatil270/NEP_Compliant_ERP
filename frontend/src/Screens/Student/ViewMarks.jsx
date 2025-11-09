@@ -11,7 +11,27 @@ const ViewMarks = () => {
     userData?.class || 1
   );
   const [marks, setMarks] = useState([]);
+  const [subjects, setSubjects] = useState([]);
   const userToken = localStorage.getItem("userToken");
+
+  const fetchSubjects = async (classNum) => {
+    try {
+      const response = await axiosWrapper.get(`/subject?class=${classNum}`, {
+        headers: { Authorization: `Bearer ${userToken}` },
+      });
+      if (response.data.success) {
+        setSubjects(response.data.data);
+      } else {
+        setSubjects([]);
+      }
+    } catch (error) {
+      if (error.response?.status === 404) {
+        setSubjects([]);
+        return;
+      }
+      toast.error(error.response?.data?.message || "Error fetching subjects");
+    }
+  };
 
   const fetchMarks = async (classNum) => {
     setDataLoading(true);
@@ -38,17 +58,23 @@ const ViewMarks = () => {
   };
 
   useEffect(() => {
-    fetchMarks(userData?.class || 1);
+    const initialClass = userData?.class || 1;
+    fetchSubjects(initialClass);
+    fetchMarks(initialClass);
   }, []);
 
   const handleClassChange = (e) => {
     const classNum = e.target.value;
     setSelectedClass(classNum);
+    fetchSubjects(classNum);
     fetchMarks(classNum);
   };
 
   const midTermMarks = marks.filter((mark) => mark.examId.examType === "mid");
   const endTermMarks = marks.filter((mark) => mark.examId.examType === "end");
+
+  const getSubjectMark = (marksArray, subjectId) =>
+    marksArray.find((m) => m.subjectId?._id === subjectId);
 
   return (
     <div className="w-full mx-auto mt-10 flex justify-center items-start flex-col mb-10">
@@ -75,33 +101,36 @@ const ViewMarks = () => {
           <h2 className="text-xl font-semibold mb-4">Mid Term Marks</h2>
           {dataLoading ? (
             <p className="text-gray-500">Loading...</p>
-          ) : midTermMarks.length > 0 ? (
+          ) : subjects.length > 0 ? (
             <div className="space-y-4">
-              {midTermMarks.map((mark) => (
-                <div
-                  key={mark._id}
-                  className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <p className="font-medium text-gray-800">
-                        {mark.subjectId.name}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        {mark.examId.name}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-lg font-semibold text-blue-600">
-                        {mark.marksObtained}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        out of {mark.examId.totalMarks}
-                      </p>
+              {subjects.map((subject) => {
+                const mark = getSubjectMark(midTermMarks, subject._id);
+                return (
+                  <div
+                    key={subject._id}
+                    className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="font-medium text-gray-800">{subject.name}</p>
+                        <p className="text-sm text-gray-500">
+                          {mark ? mark.examId.name : "Mid Term"}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className={`text-lg font-semibold ${mark ? "text-blue-600" : "text-gray-400"}`}>
+                          {mark ? mark.marksObtained : "to be updated"}
+                        </p>
+                        {mark && (
+                          <p className="text-sm text-gray-500">
+                            out of {mark.examId.totalMarks}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <p className="text-gray-500">No mid term marks available</p>
@@ -112,33 +141,36 @@ const ViewMarks = () => {
           <h2 className="text-xl font-semibold mb-4">End Term Marks</h2>
           {dataLoading ? (
             <p className="text-gray-500">Loading...</p>
-          ) : endTermMarks.length > 0 ? (
+          ) : subjects.length > 0 ? (
             <div className="space-y-4">
-              {endTermMarks.map((mark) => (
-                <div
-                  key={mark._id}
-                  className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <p className="font-medium text-gray-800">
-                        {mark.subjectId.name}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        {mark.examId.name}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-lg font-semibold text-blue-600">
-                        {mark.marksObtained}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        out of {mark.examId.totalMarks}
-                      </p>
+              {subjects.map((subject) => {
+                const mark = getSubjectMark(endTermMarks, subject._id);
+                return (
+                  <div
+                    key={subject._id}
+                    className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="font-medium text-gray-800">{subject.name}</p>
+                        <p className="text-sm text-gray-500">
+                          {mark ? mark.examId.name : "End Term"}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className={`text-lg font-semibold ${mark ? "text-blue-600" : "text-gray-400"}`}>
+                          {mark ? mark.marksObtained : "to be updated"}
+                        </p>
+                        {mark && (
+                          <p className="text-sm text-gray-500">
+                            out of {mark.examId.totalMarks}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <p className="text-gray-500">No end term marks available</p>

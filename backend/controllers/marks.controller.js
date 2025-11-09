@@ -45,7 +45,7 @@ const addMarksController = async (req, res) => {
   try {
     const { studentId, class: classNum, branch, marks } = req.body;
 
-    if (!studentId || !classNum || !branch || !marks || !Array.isArray(marks)) {
+    if (!studentId || !classNum  || !marks || !Array.isArray(marks)) {
       return res.status(400).json({
         success: false,
         message: "Invalid input data",
@@ -69,7 +69,7 @@ const addMarksController = async (req, res) => {
       existingMarks = await Marks.create({
         student: studentId,
         class: classNum,
-        branch,
+        
         marks,
       });
     }
@@ -169,7 +169,7 @@ const getStudentsWithMarksController = async (req, res) => {
   try {
     const { branch, subject, class: classNum, examId } = req.query;
 
-    if (!branch || !subject || !classNum || !examId) {
+    if ( !subject || !classNum || !examId) {
       return res.status(400).json({
         success: false,
         message:
@@ -178,7 +178,6 @@ const getStudentsWithMarksController = async (req, res) => {
     }
 
     const students = await Student.find({
-      branchId: branch,
       class: Number(classNum),
     }).select("_id enrollmentNo firstName lastName");
 
