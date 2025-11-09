@@ -10,6 +10,7 @@ import Material from "./Material";
 import Profile from "./Profile";
 import Exam from "../Exam";
 import ViewMarks from "./ViewMarks";
+import ViewAttendance from "./ViewAttendance";
 import { useNavigate, useLocation } from "react-router-dom";
 
 const MENU_ITEMS = [
@@ -19,6 +20,7 @@ const MENU_ITEMS = [
   { id: "notice", label: "Notice", component: Notice },
   { id: "exam", label: "Exam", component: Exam },
   { id: "marks", label: "Marks", component: ViewMarks },
+  { id: "attendance", label: "Attendance", component: ViewAttendance },
 ];
 
 const Home = () => {

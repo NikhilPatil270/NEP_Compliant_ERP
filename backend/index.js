@@ -31,6 +31,7 @@ app.use("/api/timetable", require("./routes/timetable.route"));
 app.use("/api/material", require("./routes/material.route"));
 app.use("/api/exam", require("./routes/exam.route"));
 app.use("/api/marks", require("./routes/marks.route"));
+app.use("/api/attendance", require("./routes/attendance.route"));
 
 app.listen(port, () => {
   console.log(`Server Listening On http://localhost:${port}`);
