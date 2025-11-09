@@ -136,7 +136,6 @@ const ViewMarks = () => {
             <p className="text-gray-500">No mid term marks available</p>
           )}
         </div>
-
         <div className="bg-white rounded-lg shadow-md p-6">
           <h2 className="text-xl font-semibold mb-4">End Term Marks</h2>
           {dataLoading ? (
@@ -176,8 +175,13 @@ const ViewMarks = () => {
             <p className="text-gray-500">No end term marks available</p>
           )}
         </div>
+        <div>
+          <Heading title="View Feedback" />
+          <h1 className="mt-5">TO BE DONE</h1>
+        </div>
       </div>
     </div>
+    
   );
 };
 
