@@ -1,8 +1,15 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { toast } from "react-hot-toast";
 import axiosWrapper from "../../utils/AxiosWrapper";
 import Heading from "../../components/Heading";
 import { useSelector } from "react-redux";
+
+const COMPETENCY_LABELS = {
+  understandingOfConcepts: "Concept Mastery",
+  applicationReasoning: "Application & Reasoning",
+  communication: "Communication",
+  participationEffortAttitude: "Participation & Attitude",
+};
 
 const ViewMarks = () => {
   const userData = useSelector((state) => state.userData);
@@ -111,11 +118,146 @@ const ViewMarks = () => {
     }
   };
 
+  const feedbackData = useMemo(() => {
+    if (!marks || marks.length === 0) {
+      return null;
+    }
+
+    const findCBA = (subjectId, examType) =>
+      cbaScores.find(
+        (cba) =>
+          cba.subjectId?._id === subjectId && cba.examId?.examType === examType
+      );
+
+    const subjectMap = marks.reduce((acc, mark) => {
+      const subjectId = mark.subjectId?._id;
+      if (!subjectId) return acc;
+
+      if (!acc[subjectId]) {
+        acc[subjectId] = {
+          id: subjectId,
+          name: mark.subjectId?.name || "Subject",
+          totalObtained: 0,
+          totalPossible: 0,
+          exams: [],
+          cbaFlags: [],
+        };
+      }
+
+      acc[subjectId].totalObtained += mark.marksObtained || 0;
+      acc[subjectId].totalPossible += mark.examId?.totalMarks || 0;
+
+      const cbaScore = findCBA(subjectId, mark.examId?.examType);
+      let cbaHighlights = [];
+      if (cbaScore?.competencies) {
+        cbaHighlights = Object.entries(cbaScore.competencies)
+          .filter(([, value]) => value && value !== "Meets Expectations")
+          .map(([key, value]) => {
+            const readableKey =
+              COMPETENCY_LABELS[key] || key.replace(/([A-Z])/g, " $1");
+            return `${readableKey}: ${value}`;
+          });
+      }
+
+      acc[subjectId].cbaFlags.push(...cbaHighlights);
+      acc[subjectId].exams.push({
+        examName: mark.examId?.name || "Exam",
+        examType: mark.examId?.examType,
+        score: mark.marksObtained || 0,
+        total: mark.examId?.totalMarks || 0,
+        cbaScore,
+        cbaHighlights,
+      });
+
+      return acc;
+    }, {});
+
+    const subjectSummaries = Object.values(subjectMap)
+      .map((subject) => {
+        const percentage =
+          subject.totalPossible > 0
+            ? (subject.totalObtained / subject.totalPossible) * 100
+            : 0;
+
+        const performanceTag =
+          percentage >= 85
+            ? "Excellent"
+            : percentage >= 70
+            ? "Steady"
+            : percentage >= 55
+            ? "Needs Push"
+            : "Priority";
+
+        const action =
+          percentage >= 85
+            ? "Keep stretching with enrichment worksheets."
+            : percentage >= 70
+            ? "Strengthen tricky concepts to reach excellence."
+            : percentage >= 55
+            ? "Revise fundamentals and solve extra practice sets."
+            : "Schedule remedial time to rebuild foundational skills.";
+
+        const cbaHighlights = Array.from(new Set(subject.cbaFlags));
+
+        return {
+          ...subject,
+          percentage,
+          performanceTag,
+          action,
+          cbaHighlights,
+        };
+      })
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    const strongAreas = subjectSummaries.filter(
+      (subject) => subject.percentage >= 80
+    );
+    const weakAreas = subjectSummaries.filter(
+      (subject) => subject.percentage < 60
+    );
+
+    const strongNames = strongAreas.map((subject) => subject.name);
+    const weakNames = weakAreas.map((subject) => subject.name);
+
+    const generalPlan = [
+      strongNames.length
+        ? `Maintain focus on ${strongNames.join(", ")} to keep your edge.`
+        : "Build daily practice momentum to establish strong subjects.",
+      weakNames.length
+        ? `Dedicate a 30-minute daily slot to ${weakNames.join(", ")}.`
+        : "Continue your daily revision rhythm and timed practice.",
+      "Revise the core concepts before each upcoming assessment.",
+    ];
+
+    const specificTips =
+      weakAreas.length > 0
+        ? weakAreas.map(
+            (subject) =>
+              `${subject.name}: ${subject.action} Target ${
+                Math.round(subject.percentage + 10) || 10
+              }% next term.`
+          )
+        : [
+            "Experiment with higher-order questions across subjects to stay ahead.",
+          ];
+
+    return {
+      subjectSummaries,
+      strongAreas,
+      weakAreas,
+      generalPlan,
+      specificTips,
+    };
+  }, [marks, cbaScores]);
+
   const midTermMarks = marks.filter((mark) => mark.examId.examType === "mid");
   const endTermMarks = marks.filter((mark) => mark.examId.examType === "end");
 
   const getSubjectMark = (marksArray, subjectId) =>
     marksArray.find((m) => m.subjectId?._id === subjectId);
+
+  const hasFeedback =
+    feedbackData && feedbackData.subjectSummaries.length > 0;
 
   return (
     <div className="w-full mx-auto mt-10 flex justify-center items-start flex-col mb-10">
@@ -236,9 +378,228 @@ const ViewMarks = () => {
             <p className="text-gray-500">No end term marks available</p>
           )}
         </div>
-        <div>
-          <Heading title="View Feedback" />
-          <h1 className="mt-5">TO BE DONE</h1>
+        <div className="col-span-1 md:col-span-2">
+          <div className="bg-gradient-to-b from-blue-50 to-white rounded-2xl shadow-sm p-6 border border-blue-100">
+            <div className="flex items-center justify-between mb-6">
+              <Heading title="View Feedback" />
+              {hasFeedback && (
+                <p className="text-xs md:text-sm text-gray-500">
+                  Updated on {new Date().toLocaleDateString()}
+                </p>
+              )}
+            </div>
+
+            {!hasFeedback ? (
+              <p className="text-gray-600">
+                Feedback will appear here once your marks and CBA scores are
+                published.
+              </p>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-white border border-blue-100 rounded-xl p-5 shadow-sm">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span role="img" aria-label="strength" className="text-xl">
+                        💪
+                      </span>
+                      <h3 className="text-lg font-semibold text-blue-700">
+                        Strong Areas
+                      </h3>
+                    </div>
+                    <p className="text-sm text-gray-600 mb-4">
+                      You demonstrate a strong grasp in these subjects:
+                    </p>
+                    <ul className="space-y-3">
+                      {feedbackData.strongAreas.length > 0 ? (
+                        feedbackData.strongAreas.map((subject) => (
+                          <li
+                            key={subject.id}
+                            className="flex justify-between items-center bg-blue-50 border border-blue-100 rounded-lg px-4 py-3"
+                          >
+                            <div>
+                              <p className="font-semibold text-gray-800">
+                                {subject.name}
+                              </p>
+                              <p className="text-sm text-gray-500">
+                                Avg Score: {subject.percentage.toFixed(1)}%
+                              </p>
+                            </div>
+                            <span className="text-sm font-medium text-blue-600">
+                              Maintain focus
+                            </span>
+                          </li>
+                        ))
+                      ) : (
+                        <li className="text-sm text-gray-500">
+                          Keep practicing to unlock strong areas.
+                        </li>
+                      )}
+                    </ul>
+                  </div>
+
+                  <div className="bg-white border border-blue-100 rounded-xl p-5 shadow-sm">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span role="img" aria-label="weakness" className="text-xl">
+                        ⚠️
+                      </span>
+                      <h3 className="text-lg font-semibold text-blue-700">
+                        Priority Areas
+                      </h3>
+                    </div>
+                    <p className="text-sm text-gray-600 mb-4">
+                      These subjects require immediate attention:
+                    </p>
+                    <ul className="space-y-3">
+                      {feedbackData.weakAreas.length > 0 ? (
+                        feedbackData.weakAreas.map((subject) => (
+                          <li
+                            key={subject.id}
+                            className="flex justify-between items-center bg-red-50 border border-red-100 rounded-lg px-4 py-3"
+                          >
+                            <div>
+                              <p className="font-semibold text-gray-800">
+                                {subject.name}
+                              </p>
+                              <p className="text-sm text-gray-500">
+                                Avg Score: {subject.percentage.toFixed(1)}%
+                              </p>
+                            </div>
+                            <span className="text-sm font-medium text-red-600">
+                              Dedicate more time
+                            </span>
+                          </li>
+                        ))
+                      ) : (
+                        <li className="text-sm text-gray-500">
+                          No priority areas detected. Keep up the good work!
+                        </li>
+                      )}
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="mt-8 bg-white border border-blue-100 rounded-xl p-5 shadow-sm">
+                  <div className="flex items-center gap-2 mb-4">
+                    <span role="img" aria-label="plan" className="text-xl">
+                      📝
+                    </span>
+                    <h3 className="text-lg font-semibold text-blue-700">
+                      Suggested Action Plan & Improvement Tips
+                    </h3>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-4">
+                    The following tips are generated based on your current marks
+                    and CBA competencies.
+                  </p>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div>
+                      <h4 className="text-md font-semibold text-gray-800 mb-3">
+                        General Action Plan
+                      </h4>
+                      <ul className="space-y-2 text-sm text-gray-600 list-disc list-inside">
+                        {feedbackData.generalPlan.map((tip, index) => (
+                          <li key={index}>{tip}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="text-md font-semibold text-gray-800 mb-3">
+                        Specific Subject Improvement Tips
+                      </h4>
+                      <ul className="space-y-2 text-sm text-gray-600 list-disc list-inside">
+                        {feedbackData.specificTips.map((tip, index) => (
+                          <li key={index}>{tip}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-8">
+                  <h4 className="text-md font-semibold text-gray-800">
+                    Subject-wise Insights (Marks + CBA)
+                  </h4>
+                  <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {feedbackData.subjectSummaries.map((subject) => (
+                      <div
+                        key={subject.id}
+                        className="bg-white border border-blue-100 rounded-xl p-5 shadow-sm flex flex-col gap-4"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <p className="font-semibold text-gray-900">
+                              {subject.name}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              Average Score: {subject.percentage.toFixed(1)}%
+                            </p>
+                          </div>
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                              subject.performanceTag === "Excellent"
+                                ? "bg-blue-100 text-blue-700"
+                                : subject.performanceTag === "Steady"
+                                ? "bg-sky-100 text-sky-700"
+                                : subject.performanceTag === "Needs Push"
+                                ? "bg-yellow-100 text-yellow-700"
+                                : "bg-red-100 text-red-700"
+                            }`}
+                          >
+                            {subject.performanceTag}
+                          </span>
+                        </div>
+
+                        <div className="space-y-2">
+                          {subject.exams.map((exam, index) => (
+                            <div
+                              key={`${subject.id}-${exam.examType}-${index}`}
+                              className="flex items-center justify-between text-sm bg-blue-50 rounded-lg px-3 py-2"
+                            >
+                              <div>
+                                <p className="font-medium text-gray-800">
+                                  {exam.examName}
+                                </p>
+                                <p className="text-xs text-gray-500 capitalize">
+                                  {exam.examType} term
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <p className="font-semibold text-blue-700">
+                                  {exam.score}/{exam.total}
+                                </p>
+                                {exam.cbaScore && (
+                                  <p className="text-[11px] text-gray-500">
+                                    CBA saved
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {subject.cbaHighlights.length > 0 && (
+                          <div>
+                            <p className="text-sm font-semibold text-gray-800 mb-2">
+                              CBA Focus Areas
+                            </p>
+                            <ul className="space-y-1 text-sm text-gray-600 list-disc list-inside">
+                              {subject.cbaHighlights.map((highlight, index) => (
+                                <li key={index}>{highlight}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        <p className="text-sm text-blue-700 font-medium">
+                          Next Step: {subject.action}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
