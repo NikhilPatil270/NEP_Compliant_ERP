@@ -19,6 +19,14 @@ const AddMarks = () => {
   const [marksData, setMarksData] = useState({});
   const [consent, setConsent] = useState(false);
   const [showSearch, setShowSearch] = useState(true);
+  const [showCBAModal, setShowCBAModal] = useState(false);
+  const [selectedStudentForCBA, setSelectedStudentForCBA] = useState(null);
+  const [cbaData, setCbaData] = useState({
+    understandingOfConcepts: "",
+    applicationReasoning: "",
+    communication: "",
+    participationEffortAttitude: "",
+  });
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -251,6 +259,96 @@ const AddMarks = () => {
     setMasterMarksData([]);
     setMarksData({});
     setConsent(false);
+    setShowCBAModal(false);
+    setSelectedStudentForCBA(null);
+  };
+
+  const handleOpenCBAModal = async (student) => {
+    setSelectedStudentForCBA(student);
+    setShowCBAModal(true);
+    
+    // Fetch existing CBA data if available
+    try {
+      const response = await axiosWrapper.get(
+        `/cba?studentId=${student._id}&subjectId=${selectedSubject?._id}&examId=${selectedExam?._id}&class=${selectedClass}`,
+        {
+          headers: { Authorization: `Bearer ${userToken}` },
+        }
+      );
+
+      if (response.data.success && response.data.data) {
+        setCbaData(response.data.data.competencies);
+      } else {
+        setCbaData({
+          understandingOfConcepts: "",
+          applicationReasoning: "",
+          communication: "",
+          participationEffortAttitude: "",
+        });
+      }
+    } catch (error) {
+      setCbaData({
+        understandingOfConcepts: "",
+        applicationReasoning: "",
+        communication: "",
+        participationEffortAttitude: "",
+      });
+    }
+  };
+
+  const handleCloseCBAModal = () => {
+    setShowCBAModal(false);
+    setSelectedStudentForCBA(null);
+    setCbaData({
+      understandingOfConcepts: "",
+      applicationReasoning: "",
+      communication: "",
+      participationEffortAttitude: "",
+    });
+  };
+
+  const handleCBASubmit = async () => {
+    // Validate all competencies are selected
+    if (
+      !cbaData.understandingOfConcepts ||
+      !cbaData.applicationReasoning ||
+      !cbaData.communication ||
+      !cbaData.participationEffortAttitude
+    ) {
+      toast.error("Please select all competencies");
+      return;
+    }
+
+    setDataLoading(true);
+    toast.loading("Saving CBA score...");
+    try {
+      const response = await axiosWrapper.post(
+        "/cba",
+        {
+          studentId: selectedStudentForCBA._id,
+          subjectId: selectedSubject?._id,
+          examId: selectedExam?._id,
+          class: selectedClass,
+          competencies: cbaData,
+        },
+        {
+          headers: { Authorization: `Bearer ${userToken}` },
+        }
+      );
+
+      if (response.data.success) {
+        toast.success("CBA score saved successfully!");
+        handleCloseCBAModal();
+      } else {
+        toast.error(response.data.message);
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Error saving CBA score");
+      console.error("CBA submit error:", error);
+    } finally {
+      setDataLoading(false);
+      toast.dismiss();
+    }
   };
 
   const handleSearch = async () => {
@@ -470,29 +568,40 @@ const AddMarks = () => {
             </CustomButton>
           </div>
 
-          <div className="grid grid-cols-4 gap-4 w-[100%] mx-auto">
+          <div className="grid grid-cols-1 gap-4 w-[100%] mx-auto">
             {masterMarksData.map((student) => (
               <div
                 key={student._id}
-                className="flex items-center justify-between w-full border rounded-md"
+                className="flex flex-col gap-2 w-full border rounded-md p-4"
               >
-                <p className="font-medium text-gray-700 flex items-center justify-center px-3 h-full py-2 rounded-md min-w-[120px] text-center">
-                  {student.enrollmentNo}
-                </p>
-                <input
-                  type="number"
-                  min={0}
-                  max={selectedExam?.totalMarks || 100}
-                  className="px-4 py-2 border rounded-md focus:outline-none bg-gray-50 border-gray-200 focus:ring-2 focus:ring-blue-500 w-full m-2"
-                  value={marksData[student._id] || ""}
-                  placeholder="Enter Marks"
-                  onChange={(e) =>
-                    setMarksData({
-                      ...marksData,
-                      [student._id]: e.target.value,
-                    })
-                  }
-                />
+                <div className="flex items-center justify-between w-full">
+                  <p className="font-medium text-gray-700 flex items-center justify-center px-3 h-full py-2 rounded-md min-w-[120px] text-center">
+                    {student.enrollmentNo}
+                  </p>
+                  <input
+                    type="number"
+                    min={0}
+                    max={selectedExam?.totalMarks || 100}
+                    className="px-4 py-2 border rounded-md focus:outline-none bg-gray-50 border-gray-200 focus:ring-2 focus:ring-blue-500 w-full m-2"
+                    value={marksData[student._id] || ""}
+                    placeholder="Enter Marks"
+                    onChange={(e) =>
+                      setMarksData({
+                        ...marksData,
+                        [student._id]: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+                <div className="flex justify-end">
+                  <CustomButton
+                    variant="primary"
+                    onClick={() => handleOpenCBAModal(student)}
+                    className="text-sm"
+                  >
+                    CBA SCORE
+                  </CustomButton>
+                </div>
               </div>
             ))}
           </div>
@@ -519,6 +628,307 @@ const AddMarks = () => {
             >
               {dataLoading ? "Submitting..." : "Submit Marks"}
             </CustomButton>
+          </div>
+        </div>
+      )}
+
+      {/* CBA Modal */}
+      {showCBAModal && selectedStudentForCBA && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold text-gray-800">
+                CBA Score - Student {selectedStudentForCBA.enrollmentNo}
+              </h2>
+              <button
+                onClick={handleCloseCBAModal}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="mb-4 p-4 bg-blue-50 rounded-md">
+              <p className="text-sm text-gray-600">
+                <strong>Subject:</strong> {selectedSubject?.name} |{" "}
+                <strong>Exam:</strong> {selectedExam?.name} |{" "}
+                <strong>Class:</strong> {selectedClass}
+              </p>
+            </div>
+
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold mb-4 text-gray-800">
+                COMMON RUBRIC FOR ALL SUBJECTS
+              </h3>
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse border border-gray-300">
+                  <thead>
+                    <tr className="bg-gray-100">
+                      <th className="border border-gray-300 p-3 text-left font-semibold">
+                        Competency
+                      </th>
+                      <th className="border border-gray-300 p-3 text-center font-semibold">
+                        Needs Improvement
+                      </th>
+                      <th className="border border-gray-300 p-3 text-center font-semibold">
+                        Approaching Expectations
+                      </th>
+                      <th className="border border-gray-300 p-3 text-center font-semibold">
+                        Meets Expectations
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td className="border border-gray-300 p-3 font-medium">
+                        Understanding of Concepts / Skills
+                      </td>
+                      <td className="border border-gray-300 p-3 text-center">
+                        <input
+                          type="radio"
+                          name="understandingOfConcepts"
+                          value="Needs Improvement"
+                          checked={
+                            cbaData.understandingOfConcepts ===
+                            "Needs Improvement"
+                          }
+                          onChange={(e) =>
+                            setCbaData({
+                              ...cbaData,
+                              understandingOfConcepts: e.target.value,
+                            })
+                          }
+                          className="w-4 h-4 text-blue-600"
+                        />
+                      </td>
+                      <td className="border border-gray-300 p-3 text-center">
+                        <input
+                          type="radio"
+                          name="understandingOfConcepts"
+                          value="Approaching Expectations"
+                          checked={
+                            cbaData.understandingOfConcepts ===
+                            "Approaching Expectations"
+                          }
+                          onChange={(e) =>
+                            setCbaData({
+                              ...cbaData,
+                              understandingOfConcepts: e.target.value,
+                            })
+                          }
+                          className="w-4 h-4 text-blue-600"
+                        />
+                      </td>
+                      <td className="border border-gray-300 p-3 text-center">
+                        <input
+                          type="radio"
+                          name="understandingOfConcepts"
+                          value="Meets Expectations"
+                          checked={
+                            cbaData.understandingOfConcepts ===
+                            "Meets Expectations"
+                          }
+                          onChange={(e) =>
+                            setCbaData({
+                              ...cbaData,
+                              understandingOfConcepts: e.target.value,
+                            })
+                          }
+                          className="w-4 h-4 text-blue-600"
+                        />
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="border border-gray-300 p-3 font-medium">
+                        Application / Reasoning
+                      </td>
+                      <td className="border border-gray-300 p-3 text-center">
+                        <input
+                          type="radio"
+                          name="applicationReasoning"
+                          value="Needs Improvement"
+                          checked={
+                            cbaData.applicationReasoning ===
+                            "Needs Improvement"
+                          }
+                          onChange={(e) =>
+                            setCbaData({
+                              ...cbaData,
+                              applicationReasoning: e.target.value,
+                            })
+                          }
+                          className="w-4 h-4 text-blue-600"
+                        />
+                      </td>
+                      <td className="border border-gray-300 p-3 text-center">
+                        <input
+                          type="radio"
+                          name="applicationReasoning"
+                          value="Approaching Expectations"
+                          checked={
+                            cbaData.applicationReasoning ===
+                            "Approaching Expectations"
+                          }
+                          onChange={(e) =>
+                            setCbaData({
+                              ...cbaData,
+                              applicationReasoning: e.target.value,
+                            })
+                          }
+                          className="w-4 h-4 text-blue-600"
+                        />
+                      </td>
+                      <td className="border border-gray-300 p-3 text-center">
+                        <input
+                          type="radio"
+                          name="applicationReasoning"
+                          value="Meets Expectations"
+                          checked={
+                            cbaData.applicationReasoning ===
+                            "Meets Expectations"
+                          }
+                          onChange={(e) =>
+                            setCbaData({
+                              ...cbaData,
+                              applicationReasoning: e.target.value,
+                            })
+                          }
+                          className="w-4 h-4 text-blue-600"
+                        />
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="border border-gray-300 p-3 font-medium">
+                        Communication
+                      </td>
+                      <td className="border border-gray-300 p-3 text-center">
+                        <input
+                          type="radio"
+                          name="communication"
+                          value="Needs Improvement"
+                          checked={cbaData.communication === "Needs Improvement"}
+                          onChange={(e) =>
+                            setCbaData({
+                              ...cbaData,
+                              communication: e.target.value,
+                            })
+                          }
+                          className="w-4 h-4 text-blue-600"
+                        />
+                      </td>
+                      <td className="border border-gray-300 p-3 text-center">
+                        <input
+                          type="radio"
+                          name="communication"
+                          value="Approaching Expectations"
+                          checked={
+                            cbaData.communication === "Approaching Expectations"
+                          }
+                          onChange={(e) =>
+                            setCbaData({
+                              ...cbaData,
+                              communication: e.target.value,
+                            })
+                          }
+                          className="w-4 h-4 text-blue-600"
+                        />
+                      </td>
+                      <td className="border border-gray-300 p-3 text-center">
+                        <input
+                          type="radio"
+                          name="communication"
+                          value="Meets Expectations"
+                          checked={cbaData.communication === "Meets Expectations"}
+                          onChange={(e) =>
+                            setCbaData({
+                              ...cbaData,
+                              communication: e.target.value,
+                            })
+                          }
+                          className="w-4 h-4 text-blue-600"
+                        />
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="border border-gray-300 p-3 font-medium">
+                        Participation, Effort & Attitude
+                      </td>
+                      <td className="border border-gray-300 p-3 text-center">
+                        <input
+                          type="radio"
+                          name="participationEffortAttitude"
+                          value="Needs Improvement"
+                          checked={
+                            cbaData.participationEffortAttitude ===
+                            "Needs Improvement"
+                          }
+                          onChange={(e) =>
+                            setCbaData({
+                              ...cbaData,
+                              participationEffortAttitude: e.target.value,
+                            })
+                          }
+                          className="w-4 h-4 text-blue-600"
+                        />
+                      </td>
+                      <td className="border border-gray-300 p-3 text-center">
+                        <input
+                          type="radio"
+                          name="participationEffortAttitude"
+                          value="Approaching Expectations"
+                          checked={
+                            cbaData.participationEffortAttitude ===
+                            "Approaching Expectations"
+                          }
+                          onChange={(e) =>
+                            setCbaData({
+                              ...cbaData,
+                              participationEffortAttitude: e.target.value,
+                            })
+                          }
+                          className="w-4 h-4 text-blue-600"
+                        />
+                      </td>
+                      <td className="border border-gray-300 p-3 text-center">
+                        <input
+                          type="radio"
+                          name="participationEffortAttitude"
+                          value="Meets Expectations"
+                          checked={
+                            cbaData.participationEffortAttitude ===
+                            "Meets Expectations"
+                          }
+                          onChange={(e) =>
+                            setCbaData({
+                              ...cbaData,
+                              participationEffortAttitude: e.target.value,
+                            })
+                          }
+                          className="w-4 h-4 text-blue-600"
+                        />
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-4">
+              <CustomButton
+                variant="secondary"
+                onClick={handleCloseCBAModal}
+                disabled={dataLoading}
+              >
+                Cancel
+              </CustomButton>
+              <CustomButton
+                variant="primary"
+                onClick={handleCBASubmit}
+                disabled={dataLoading}
+              >
+                {dataLoading ? "Saving..." : "Save CBA Score"}
+              </CustomButton>
+            </div>
           </div>
         </div>
       )}

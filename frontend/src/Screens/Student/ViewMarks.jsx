@@ -12,6 +12,9 @@ const ViewMarks = () => {
   );
   const [marks, setMarks] = useState([]);
   const [subjects, setSubjects] = useState([]);
+  const [cbaScores, setCbaScores] = useState([]);
+  const [showCBAModal, setShowCBAModal] = useState(false);
+  const [selectedCBAData, setSelectedCBAData] = useState(null);
   const userToken = localStorage.getItem("userToken");
 
   const fetchSubjects = async (classNum) => {
@@ -57,10 +60,29 @@ const ViewMarks = () => {
     }
   };
 
+  const fetchCBAScores = async (classNum) => {
+    try {
+      const response = await axiosWrapper.get(
+        `/cba/student?class=${classNum}`,
+        {
+          headers: { Authorization: `Bearer ${userToken}` },
+        }
+      );
+
+      if (response.data.success) {
+        setCbaScores(response.data.data);
+      }
+    } catch (error) {
+      // Silently fail if CBA scores don't exist
+      setCbaScores([]);
+    }
+  };
+
   useEffect(() => {
     const initialClass = userData?.class || 1;
     fetchSubjects(initialClass);
     fetchMarks(initialClass);
+    fetchCBAScores(initialClass);
   }, []);
 
   const handleClassChange = (e) => {
@@ -68,6 +90,25 @@ const ViewMarks = () => {
     setSelectedClass(classNum);
     fetchSubjects(classNum);
     fetchMarks(classNum);
+    fetchCBAScores(classNum);
+  };
+
+  const getCBAScore = (subjectId, examType) => {
+    return cbaScores.find(
+      (cba) =>
+        cba.subjectId?._id === subjectId &&
+        cba.examId?.examType === examType
+    );
+  };
+
+  const handleViewCBA = (subjectId, examType) => {
+    const cbaScore = getCBAScore(subjectId, examType);
+    if (cbaScore) {
+      setSelectedCBAData(cbaScore);
+      setShowCBAModal(true);
+    } else {
+      toast.error("CBA score not available for this subject and exam");
+    }
   };
 
   const midTermMarks = marks.filter((mark) => mark.examId.examType === "mid");
@@ -117,14 +158,24 @@ const ViewMarks = () => {
                           {mark ? mark.examId.name : "Mid Term"}
                         </p>
                       </div>
-                      <div className="text-right">
-                        <p className={`text-lg font-semibold ${mark ? "text-blue-600" : "text-gray-400"}`}>
-                          {mark ? mark.marksObtained : "to be updated"}
-                        </p>
-                        {mark && (
-                          <p className="text-sm text-gray-500">
-                            out of {mark.examId.totalMarks}
+                      <div className="flex items-center gap-4">
+                        <div className="text-right">
+                          <p className={`text-lg font-semibold ${mark ? "text-blue-600" : "text-gray-400"}`}>
+                            {mark ? mark.marksObtained : "to be updated"}
                           </p>
+                          {mark && (
+                            <p className="text-sm text-gray-500">
+                              out of {mark.examId.totalMarks}
+                            </p>
+                          )}
+                        </div>
+                        {getCBAScore(subject._id, "mid") && (
+                          <button
+                            onClick={() => handleViewCBA(subject._id, "mid")}
+                            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm font-medium"
+                          >
+                            CBA Score
+                          </button>
                         )}
                       </div>
                     </div>
@@ -156,14 +207,24 @@ const ViewMarks = () => {
                           {mark ? mark.examId.name : "End Term"}
                         </p>
                       </div>
-                      <div className="text-right">
-                        <p className={`text-lg font-semibold ${mark ? "text-blue-600" : "text-gray-400"}`}>
-                          {mark ? mark.marksObtained : "to be updated"}
-                        </p>
-                        {mark && (
-                          <p className="text-sm text-gray-500">
-                            out of {mark.examId.totalMarks}
+                      <div className="flex items-center gap-4">
+                        <div className="text-right">
+                          <p className={`text-lg font-semibold ${mark ? "text-blue-600" : "text-gray-400"}`}>
+                            {mark ? mark.marksObtained : "to be updated"}
                           </p>
+                          {mark && (
+                            <p className="text-sm text-gray-500">
+                              out of {mark.examId.totalMarks}
+                            </p>
+                          )}
+                        </div>
+                        {getCBAScore(subject._id, "end") && (
+                          <button
+                            onClick={() => handleViewCBA(subject._id, "end")}
+                            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm font-medium"
+                          >
+                            CBA Score
+                          </button>
                         )}
                       </div>
                     </div>
@@ -180,8 +241,151 @@ const ViewMarks = () => {
           <h1 className="mt-5">TO BE DONE</h1>
         </div>
       </div>
+
+      {/* CBA Score Modal */}
+      {showCBAModal && selectedCBAData && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold text-gray-800">
+                CBA Score - {selectedCBAData.subjectId?.name}
+              </h2>
+              <button
+                onClick={() => {
+                  setShowCBAModal(false);
+                  setSelectedCBAData(null);
+                }}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="mb-4 p-4 bg-blue-50 rounded-md">
+              <p className="text-sm text-gray-600">
+                <strong>Subject:</strong> {selectedCBAData.subjectId?.name} |{" "}
+                <strong>Exam:</strong> {selectedCBAData.examId?.name} |{" "}
+                <strong>Class:</strong> {selectedCBAData.class}
+              </p>
+            </div>
+
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold mb-4 text-gray-800">
+                COMMON RUBRIC FOR ALL SUBJECTS
+              </h3>
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse border border-gray-300">
+                  <thead>
+                    <tr className="bg-gray-100">
+                      <th className="border border-gray-300 p-3 text-left font-semibold">
+                        Competency
+                      </th>
+                      <th className="border border-gray-300 p-3 text-center font-semibold">
+                        Assessment
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td className="border border-gray-300 p-3 font-medium">
+                        Understanding of Concepts / Skills
+                      </td>
+                      <td className="border border-gray-300 p-3 text-center">
+                        <span
+                          className={`px-3 py-1 rounded-full text-sm font-medium ${
+                            selectedCBAData.competencies.understandingOfConcepts ===
+                            "Meets Expectations"
+                              ? "bg-green-100 text-green-800"
+                              : selectedCBAData.competencies.understandingOfConcepts ===
+                                "Approaching Expectations"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {selectedCBAData.competencies.understandingOfConcepts}
+                        </span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="border border-gray-300 p-3 font-medium">
+                        Application / Reasoning
+                      </td>
+                      <td className="border border-gray-300 p-3 text-center">
+                        <span
+                          className={`px-3 py-1 rounded-full text-sm font-medium ${
+                            selectedCBAData.competencies.applicationReasoning ===
+                            "Meets Expectations"
+                              ? "bg-green-100 text-green-800"
+                              : selectedCBAData.competencies.applicationReasoning ===
+                                "Approaching Expectations"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {selectedCBAData.competencies.applicationReasoning}
+                        </span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="border border-gray-300 p-3 font-medium">
+                        Communication
+                      </td>
+                      <td className="border border-gray-300 p-3 text-center">
+                        <span
+                          className={`px-3 py-1 rounded-full text-sm font-medium ${
+                            selectedCBAData.competencies.communication ===
+                            "Meets Expectations"
+                              ? "bg-green-100 text-green-800"
+                              : selectedCBAData.competencies.communication ===
+                                "Approaching Expectations"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {selectedCBAData.competencies.communication}
+                        </span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="border border-gray-300 p-3 font-medium">
+                        Participation, Effort & Attitude
+                      </td>
+                      <td className="border border-gray-300 p-3 text-center">
+                        <span
+                          className={`px-3 py-1 rounded-full text-sm font-medium ${
+                            selectedCBAData.competencies.participationEffortAttitude ===
+                            "Meets Expectations"
+                              ? "bg-green-100 text-green-800"
+                              : selectedCBAData.competencies.participationEffortAttitude ===
+                                "Approaching Expectations"
+                              ? "bg-yellow-100 text-yellow-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {selectedCBAData.competencies.participationEffortAttitude}
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                onClick={() => {
+                  setShowCBAModal(false);
+                  setSelectedCBAData(null);
+                }}
+                className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
-    
   );
 };
 
