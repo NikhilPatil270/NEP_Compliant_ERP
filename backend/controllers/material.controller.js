@@ -1,4 +1,6 @@
 const Material = require("../models/material.model");
+const MaterialView = require("../models/material-view.model");
+const StudentDetail = require("../models/details/student-details.model");
 const ApiResponse = require("../utils/ApiResponse");
 
 const getMaterialsController = async (req, res) => {
@@ -153,9 +155,120 @@ const deleteMaterialController = async (req, res) => {
   }
 };
 
+const trackMaterialViewController = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const studentId = req.userId; // From auth middleware - student's ID
+
+    if (!id) {
+      return ApiResponse.badRequest("Material ID is required").send(res);
+    }
+
+    const material = await Material.findById(id);
+
+    if (!material) {
+      return ApiResponse.notFound("Material not found").send(res);
+    }
+
+    // Check if view already exists
+    const existingView = await MaterialView.findOne({
+      material: id,
+      student: studentId,
+    });
+
+    if (existingView) {
+      // View already tracked, just return success
+      return ApiResponse.success(
+        existingView,
+        "Material view already tracked"
+      ).send(res);
+    }
+
+    // Create new view record
+    const materialView = await MaterialView.create({
+      material: id,
+      student: studentId,
+    });
+
+    return ApiResponse.success(
+      materialView,
+      "Material view tracked successfully"
+    ).send(res);
+  } catch (error) {
+    console.error("Track Material View Error: ", error);
+    return ApiResponse.internalServerError().send(res);
+  }
+};
+
+const getMaterialViewsController = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return ApiResponse.badRequest("Material ID is required").send(res);
+    }
+
+    const material = await Material.findById(id);
+
+    if (!material) {
+      return ApiResponse.notFound("Material not found").send(res);
+    }
+
+    // Check if faculty owns this material
+    if (material.faculty.toString() !== req.userId) {
+      return ApiResponse.unauthorized(
+        "You are not authorized to view this material's statistics"
+      ).send(res);
+    }
+
+    // Get all students in the same class and branch as the material
+    const allStudents = await StudentDetail.find({
+      class: material.class,
+      status: "active",
+    }).select("_id enrollmentNo firstName middleName lastName");
+
+    // Get all views for this material
+    const views = await MaterialView.find({ material: id })
+      .populate("student", "enrollmentNo firstName middleName lastName")
+      .sort({ viewedAt: -1 });
+
+    const viewedStudentIds = new Set(
+      views.map((view) => view.student._id.toString())
+    );
+
+    // Separate students into viewed and non-viewed
+    const viewedStudents = views.map((view, index) => ({
+      serialNo: index + 1,
+      studentId: view.student.enrollmentNo,
+      studentName: `${view.student.firstName} ${view.student.middleName} ${view.student.lastName}`,
+    }));
+
+    const nonViewedStudents = allStudents
+      .filter((student) => !viewedStudentIds.has(student._id.toString()))
+      .map((student, index) => ({
+        serialNo: index + 1,
+        studentId: student.enrollmentNo,
+        studentName: `${student.firstName} ${student.middleName} ${student.lastName}`,
+      }));
+
+    return ApiResponse.success(
+      {
+        viewed: viewedStudents,
+        nonViewed: nonViewedStudents,
+      },
+      "Material views retrieved successfully"
+    ).send(res);
+  } catch (error) {
+    console.error("Get Material Views Error: ", error);
+    return ApiResponse.internalServerError().send(res);
+  }
+};
+
 module.exports = {
   getMaterialsController,
   addMaterialController,
   updateMaterialController,
   deleteMaterialController,
+  trackMaterialViewController,
+  getMaterialViewsController,
 };

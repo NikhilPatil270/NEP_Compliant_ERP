@@ -33,6 +33,11 @@ const Material = () => {
     type: "",
   });
   const [error, setError] = useState(null);
+  const [showViewsModal, setShowViewsModal] = useState(false);
+  const [selectedMaterialForViews, setSelectedMaterialForViews] = useState(null);
+  const [viewedStudents, setViewedStudents] = useState([]);
+  const [nonViewedStudents, setNonViewedStudents] = useState([]);
+  const [viewsLoading, setViewsLoading] = useState(false);
 
   useEffect(() => {
     fetchSubjects();
@@ -229,6 +234,35 @@ const Material = () => {
     }
   };
 
+  const handleViewMaterialViews = async (material) => {
+    setSelectedMaterialForViews(material);
+    setShowViewsModal(true);
+    setViewsLoading(true);
+    setViewedStudents([]);
+    setNonViewedStudents([]);
+
+    try {
+      const response = await axiosWrapper.get(`/material/${material._id}/views`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("userToken")}`,
+        },
+      });
+
+      if (response.data.success) {
+        setViewedStudents(response.data.data.viewed || []);
+        setNonViewedStudents(response.data.data.nonViewed || []);
+      }
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message || "Failed to load material views"
+      );
+      setShowViewsModal(false);
+    } finally {
+      setViewsLoading(false);
+    }
+  };
+
   return (
     <div className="w-full mx-auto mt-10 flex justify-center items-start flex-col mb-10">
       <div className="flex justify-between items-center w-full">
@@ -359,6 +393,12 @@ const Material = () => {
                   <td className="py-4 px-6 capitalize">{material.type}</td>
                   <td className="py-4 px-6">
                     <div className="flex gap-4">
+                      <CustomButton
+                        variant="primary"
+                        onClick={() => handleViewMaterialViews(material)}
+                      >
+                        who viewed?
+                      </CustomButton>
                       <CustomButton
                         variant="secondary"
                         onClick={() => handleEdit(material)}
@@ -554,6 +594,130 @@ const Material = () => {
         onConfirm={handleDelete}
         message="Are you sure you want to delete this material? This action cannot be undone."
       />
+
+      {/* Who Viewed Modal */}
+      {showViewsModal && selectedMaterialForViews && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg p-6 max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">
+                Material Views - {selectedMaterialForViews.title}
+              </h2>
+              <CustomButton
+                onClick={() => {
+                  setShowViewsModal(false);
+                  setSelectedMaterialForViews(null);
+                  setViewedStudents([]);
+                  setNonViewedStudents([]);
+                }}
+                variant="secondary"
+              >
+                <AiOutlineClose size={24} />
+              </CustomButton>
+            </div>
+
+            {viewsLoading ? (
+              <div className="text-center py-8">Loading...</div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Viewed Students Table */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-3 text-green-700">
+                    Students Who Viewed ({viewedStudents.length})
+                  </h3>
+                  <div className="overflow-x-auto">
+                    <table className="text-sm min-w-full bg-white border">
+                      <thead>
+                        <tr className="bg-green-500 text-white">
+                          <th className="py-2 px-4 text-left font-semibold">
+                            S.No
+                          </th>
+                          <th className="py-2 px-4 text-left font-semibold">
+                            Student ID
+                          </th>
+                          <th className="py-2 px-4 text-left font-semibold">
+                            Student Name
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {viewedStudents.length > 0 ? (
+                          viewedStudents.map((student) => (
+                            <tr
+                              key={student.studentId}
+                              className="border-b hover:bg-green-50"
+                            >
+                              <td className="py-2 px-4">{student.serialNo}</td>
+                              <td className="py-2 px-4">{student.studentId}</td>
+                              <td className="py-2 px-4">{student.studentName}</td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td
+                              colSpan="3"
+                              className="text-center py-4 text-gray-500"
+                            >
+                              No students have viewed this material yet.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Non-Viewed Students Table */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-3 text-red-700">
+                    Students Who Didn't View ({nonViewedStudents.length})
+                  </h3>
+                  <div className="overflow-x-auto">
+                    <table className="text-sm min-w-full bg-white border">
+                      <thead>
+                        <tr className="bg-red-500 text-white">
+                          <th className="py-2 px-4 text-left font-semibold">
+                            S.No
+                          </th>
+                          <th className="py-2 px-4 text-left font-semibold">
+                            Student ID
+                          </th>
+                          <th className="py-2 px-4 text-left font-semibold">
+                            Student Name
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {nonViewedStudents.length > 0 ? (
+                          nonViewedStudents.map((student) => (
+                            <tr
+                              key={student.studentId}
+                              className="border-b hover:bg-red-50"
+                            >
+                              <td className="py-2 px-4">{student.serialNo}</td>
+                              <td className="py-2 px-4">{student.studentId}</td>
+                              <td className="py-2 px-4">{student.studentName}</td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td
+                              colSpan="3"
+                              className="text-center py-4 text-gray-500"
+                            >
+                              All students have viewed this material.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

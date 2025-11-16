@@ -156,7 +156,24 @@ const Material = () => {
                     <td className="py-4 px-6">
                       <CustomButton
                         variant="primary"
-                        onClick={() => {
+                        onClick={async () => {
+                          // Track material view/download
+                          try {
+                            await axiosWrapper.post(
+                              `/material/${material._id}/view`,
+                              {},
+                              {
+                                headers: {
+                                  "Content-Type": "application/json",
+                                  Authorization: `Bearer ${localStorage.getItem("userToken")}`,
+                                },
+                              }
+                            );
+                          } catch (error) {
+                            // Silently fail - don't block the download
+                            console.error("Failed to track material view:", error);
+                          }
+                          // Open the material file
                           window.open(
                             `${process.env.REACT_APP_MEDIA_LINK}/${material.file}`
                           );
