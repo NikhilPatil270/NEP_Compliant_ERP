@@ -114,6 +114,7 @@ const Login = () => {
   });
 
   const [selected, setSelected] = useState(USER_TYPES.STUDENT);
+  const [isVisible, setIsVisible] = useState(false);
 
   const handleUserTypeSelect = (type) => {
     const userType = type.toLowerCase();
@@ -158,6 +159,14 @@ const Login = () => {
   }, [navigate]);
 
   useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      setIsVisible(true);
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
+  useEffect(() => {
     if (type) {
       const capitalizedType = type.charAt(0).toUpperCase() + type.slice(1);
       setSelected(capitalizedType);
@@ -165,10 +174,16 @@ const Login = () => {
   }, [type]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center px-4 relative overflow-hidden">
-      {/* Decorative background elements */}
-      <div className="absolute top-0 left-0 w-96 h-96 bg-blue-200/30 rounded-full filter blur-3xl opacity-70 -translate-x-1/2 -translate-y-1/2"></div>
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-200/30 rounded-full filter blur-3xl opacity-70 translate-x-1/2 translate-y-1/2"></div>
+    <div
+      className={`login-screen ${
+        isVisible ? "login-screen--visible" : ""
+      } min-h-screen flex items-center justify-center px-4 relative overflow-hidden`}
+    >
+      {/* Decorative background element to balance composition */}
+      <div
+        className="absolute bottom-0 right-0 w-96 h-96 bg-purple-200/30 rounded-full filter blur-3xl opacity-70 translate-x-1/2 translate-y-1/2"
+        aria-hidden="true"
+      ></div>
       
       <div className="w-full max-w-2xl lg:w-1/2 px-6 py-12 relative z-10">
         <div className="text-center mb-8">
