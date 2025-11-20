@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import Login from "./Screens/Login";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Provider } from "react-redux";
@@ -8,8 +8,15 @@ import FacultyHome from "./Screens/Faculty/Home";
 import AdminHome from "./Screens/Admin/Home";
 import ForgetPassword from "./Screens/ForgetPassword";
 import UpdatePassword from "./Screens/UpdatePassword";
+import Preloader from "./components/Preloader";
 
 const App = () => {
+  const [isReady, setIsReady] = useState(false);
+
+  if (!isReady) {
+    return <Preloader onComplete={() => setIsReady(true)} />;
+  }
+
   return (
     <>
       <Provider store={mystore}>

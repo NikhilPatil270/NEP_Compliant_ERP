@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminLayout from "./layouts/AdminLayout";
 import FacultyLayout from "./layouts/FacultyLayout";
 import StudentLayout from "./layouts/StudentLayout";
+import Preloader from "./components/Preloader";
 import Login from "./Screens/Auth/Login";
 import Register from "./Screens/Auth/Register";
 import ForgotPassword from "./Screens/Auth/ForgotPassword";
@@ -18,6 +19,12 @@ import Profile from "./Screens/Profile";
 import UploadMarks from "./Screens/Faculty/UploadMarks";
 
 const App = () => {
+  const [isReady, setIsReady] = useState(false);
+
+  if (!isReady) {
+    return <Preloader onComplete={() => setIsReady(true)} />;
+  }
+
   return (
     <Router>
       <Toaster position="top-center" reverseOrder={false} />
