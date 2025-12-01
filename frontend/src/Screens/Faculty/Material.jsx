@@ -378,9 +378,14 @@ const Material = () => {
                     <CustomButton
                       variant="primary"
                       onClick={() => {
-                        window.open(
-                          `${process.env.REACT_APP_MEDIA_LINK}/${material.file}`
-                        );
+                        const fileUrl =
+                          material.file &&
+                          (material.file.startsWith("http://") ||
+                            material.file.startsWith("https://"))
+                            ? material.file
+                            : `${process.env.REACT_APP_MEDIA_LINK}/${material.file}`;
+
+                        window.open(fileUrl);
                       }}
                     >
                       <MdLink className="text-xl" />

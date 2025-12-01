@@ -5,6 +5,7 @@ const ApiResponse = require("../../utils/ApiResponse");
 const jwt = require("jsonwebtoken");
 const sendResetMail = require("../../utils/SendMail");
 const { generateStudentId } = require("../../utils/IdGenerator");
+const { uploadFile } = require("../../utils/imagekit");
 
 const loginStudentController = async (req, res) => {
   try {
@@ -52,7 +53,17 @@ const getAllDetailsController = async (req, res) => {
 
 const registerStudentController = async (req, res) => {
   try {
-    const profile = req.file.filename;
+    if (!req.file) {
+      return ApiResponse.badRequest("Profile image is required").send(res);
+    }
+
+    // Upload profile image to ImageKit
+    const uploadResult = await uploadFile(
+      req.file.buffer,
+      req.file.originalname
+    );
+
+    const profile = uploadResult.url;
     const classNum = parseInt(req.body.class);
 
     // Generate systematic enrollment number based on class
@@ -161,7 +172,11 @@ const updateDetailsController = async (req, res) => {
     }
 
     if (req.file) {
-      updateData.profile = req.file.filename;
+      const uploadResult = await uploadFile(
+        req.file.buffer,
+        req.file.originalname
+      );
+      updateData.profile = uploadResult.url;
     }
 
     if (updateData.dob) {

@@ -177,7 +177,13 @@ const StudentFinder = () => {
                     >
                       <td className="px-6 py-4 border-b">
                         <img
-                          src={`${process.env.REACT_APP_MEDIA_LINK}/${student.profile}`}
+                          src={
+                            student.profile &&
+                            (student.profile.startsWith("http://") ||
+                              student.profile.startsWith("https://"))
+                              ? student.profile
+                              : `${process.env.REACT_APP_MEDIA_LINK}/${student.profile}`
+                          }
                           alt={`${student.firstName}'s profile`}
                           className="w-12 h-12 object-cover rounded-full"
                           onError={(e) => {
@@ -231,7 +237,13 @@ const StudentFinder = () => {
               <div className="flex flex-col md:flex-row gap-8 mb-8">
                 <div className="w-full md:w-1/3">
                   <img
-                    src={`${process.env.REACT_APP_MEDIA_LINK}/${selectedStudent.profile}`}
+                    src={
+                      selectedStudent.profile &&
+                      (selectedStudent.profile.startsWith("http://") ||
+                        selectedStudent.profile.startsWith("https://"))
+                        ? selectedStudent.profile
+                        : `${process.env.REACT_APP_MEDIA_LINK}/${selectedStudent.profile}`
+                    }
                     alt={`${selectedStudent.firstName}'s profile`}
                     className="w-full h-auto object-cover rounded-lg"
                     onError={(e) => {

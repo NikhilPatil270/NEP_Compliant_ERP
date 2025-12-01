@@ -1,5 +1,6 @@
 const Timetable = require("../models/timetable.model");
 const ApiResponse = require("../utils/ApiResponse");
+const { uploadFile } = require("../utils/imagekit");
 
 const getTimetableController = async (req, res) => {
   try {
@@ -41,6 +42,12 @@ const addTimetableController = async (req, res) => {
       return ApiResponse.badRequest("Timetable file is required").send(res);
     }
 
+    // Upload timetable file to ImageKit
+    const uploadResult = await uploadFile(
+      req.file.buffer,
+      req.file.originalname
+    );
+
     let timetable = await Timetable.findOne({ class: classNum, branch });
 
     if (timetable) {
@@ -49,7 +56,7 @@ const addTimetableController = async (req, res) => {
         {
           class: classNum,
           branch,
-          link: req.file.filename,
+          link: uploadResult.url,
         },
         { new: true }
       );
@@ -62,7 +69,7 @@ const addTimetableController = async (req, res) => {
     timetable = await Timetable.create({
       class: classNum,
       branch,
-      link: req.file.filename,
+      link: uploadResult.url,
     });
 
     return ApiResponse.created(timetable, "Timetable added successfully").send(
@@ -83,15 +90,22 @@ const updateTimetableController = async (req, res) => {
       return ApiResponse.badRequest("Timetable ID is required").send(res);
     }
 
-    const timetable = await Timetable.findByIdAndUpdate(
-      id,
-      {
-        class: classNum,
-        branch,
-        link: req.file ? req.file.filename : undefined,
-      },
-      { new: true }
-    );
+    const updateData = {
+      class: classNum,
+      branch,
+    };
+
+    if (req.file) {
+      const uploadResult = await uploadFile(
+        req.file.buffer,
+        req.file.originalname
+      );
+      updateData.link = uploadResult.url;
+    }
+
+    const timetable = await Timetable.findByIdAndUpdate(id, updateData, {
+      new: true,
+    });
 
     if (!timetable) {
       return ApiResponse.notFound("Timetable not found").send(res);

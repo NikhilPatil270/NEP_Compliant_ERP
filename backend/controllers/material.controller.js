@@ -2,6 +2,7 @@ const Material = require("../models/material.model");
 const MaterialView = require("../models/material-view.model");
 const StudentDetail = require("../models/details/student-details.model");
 const ApiResponse = require("../utils/ApiResponse");
+const { uploadFile } = require("../utils/imagekit");
 
 const getMaterialsController = async (req, res) => {
   try {
@@ -50,6 +51,12 @@ const addMaterialController = async (req, res) => {
       return ApiResponse.badRequest("Invalid material type").send(res);
     }
 
+    // Upload file to ImageKit
+    const uploadResult = await uploadFile(
+      req.file.buffer,
+      req.file.originalname
+    );
+
     const material = await Material.create({
       title,
       subject,
@@ -57,7 +64,8 @@ const addMaterialController = async (req, res) => {
       class: classNum,
       branch,
       type,
-      file: req.file.filename,
+      // Store ImageKit URL (or you can store uploadResult.fileId if needed)
+      file: uploadResult.url,
     });
 
     const populatedMaterial = await Material.findById(material._id)
@@ -107,7 +115,13 @@ const updateMaterialController = async (req, res) => {
       }
       updateData.type = type;
     }
-    if (req.file) updateData.file = req.file.filename;
+    if (req.file) {
+      const uploadResult = await uploadFile(
+        req.file.buffer,
+        req.file.originalname
+      );
+      updateData.file = uploadResult.url;
+    }
 
     const updatedMaterial = await Material.findByIdAndUpdate(id, updateData, {
       new: true,

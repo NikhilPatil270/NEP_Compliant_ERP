@@ -234,11 +234,25 @@ const Exam = () => {
                           <p className="text-sm font-medium text-gray-700">Exam Timetable:</p>
                           <div className="border rounded-md p-2 bg-gray-50">
                             <img
-                              src={`${process.env.REACT_APP_MEDIA_LINK}/${exam.timetableLink}`}
+                              src={
+                                exam.timetableLink &&
+                                (exam.timetableLink.startsWith("http://") ||
+                                  exam.timetableLink.startsWith("https://"))
+                                  ? exam.timetableLink
+                                  : `${process.env.REACT_APP_MEDIA_LINK}/${exam.timetableLink}`
+                              }
                               alt={`${exam.name} Timetable`}
                               className="max-w-full h-auto rounded"
-                              onClick={() => window.open(`${process.env.REACT_APP_MEDIA_LINK}/${exam.timetableLink}`, '_blank')}
-                              style={{ cursor: 'pointer' }}
+                              onClick={() => {
+                                const url =
+                                  exam.timetableLink &&
+                                  (exam.timetableLink.startsWith("http://") ||
+                                    exam.timetableLink.startsWith("https://"))
+                                    ? exam.timetableLink
+                                    : `${process.env.REACT_APP_MEDIA_LINK}/${exam.timetableLink}`;
+                                window.open(url, "_blank");
+                              }}
+                              style={{ cursor: "pointer" }}
                             />
                           </div>
                           <p className="text-xs text-gray-500">Click on the image to view in full size</p>
@@ -392,7 +406,13 @@ const Exam = () => {
                   <div className="mb-2 p-2 bg-gray-50 rounded border">
                     <p className="text-xs text-gray-600 mb-1">Current timetable:</p>
                     <img
-                      src={`${process.env.REACT_APP_MEDIA_LINK}/${data.timetableLink}`}
+                      src={
+                        data.timetableLink &&
+                        (data.timetableLink.startsWith("http://") ||
+                          data.timetableLink.startsWith("https://"))
+                          ? data.timetableLink
+                          : `${process.env.REACT_APP_MEDIA_LINK}/${data.timetableLink}`
+                      }
                       alt="Current timetable"
                       className="max-w-xs h-auto rounded border"
                     />

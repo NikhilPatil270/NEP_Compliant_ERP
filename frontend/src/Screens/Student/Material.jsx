@@ -173,10 +173,15 @@ const Material = () => {
                             // Silently fail - don't block the download
                             console.error("Failed to track material view:", error);
                           }
-                          // Open the material file
-                          window.open(
-                            `${process.env.REACT_APP_MEDIA_LINK}/${material.file}`
-                          );
+                          // Open the material file (ImageKit URL or existing relative path)
+                          const fileUrl =
+                            material.file &&
+                            (material.file.startsWith("http://") ||
+                              material.file.startsWith("https://"))
+                              ? material.file
+                              : `${process.env.REACT_APP_MEDIA_LINK}/${material.file}`;
+
+                          window.open(fileUrl);
                         }}
                       >
                         <MdLink className="text-xl" />

@@ -5,6 +5,7 @@ const ApiResponse = require("../../utils/ApiResponse");
 const jwt = require("jsonwebtoken");
 const sendResetMail = require("../../utils/SendMail");
 const { generateFacultyId } = require("../../utils/IdGenerator");
+const { uploadFile } = require("../../utils/imagekit");
 
 const loginFacultyController = async (req, res) => {
   try {
@@ -47,7 +48,18 @@ const getAllFacultyController = async (req, res) => {
 const registerFacultyController = async (req, res) => {
   try {
     const { email, phone } = req.body;
-    const profile = req.file.filename;
+
+    if (!req.file) {
+      return ApiResponse.badRequest("Profile image is required").send(res);
+    }
+
+    // Upload profile image to ImageKit
+    const uploadResult = await uploadFile(
+      req.file.buffer,
+      req.file.originalname
+    );
+
+    const profile = uploadResult.url;
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return ApiResponse.badRequest("Invalid email format").send(res);
@@ -138,7 +150,11 @@ const updateFacultyController = async (req, res) => {
     }
 
     if (req.file) {
-      updateData.profile = req.file.filename;
+      const uploadResult = await uploadFile(
+        req.file.buffer,
+        req.file.originalname
+      );
+      updateData.profile = uploadResult.url;
     }
 
     if (updateData.dob) updateData.dob = new Date(updateData.dob);

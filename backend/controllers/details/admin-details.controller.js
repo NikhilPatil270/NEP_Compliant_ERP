@@ -4,6 +4,7 @@ const bcrypt = require("bcryptjs");
 const ApiResponse = require("../../utils/ApiResponse");
 const jwt = require("jsonwebtoken");
 const sendResetMail = require("../../utils/SendMail");
+const { uploadFile } = require("../../utils/imagekit");
 
 const loginAdminController = async (req, res, next) => {
   try {
@@ -55,7 +56,17 @@ const registerAdminController = async (req, res, next) => {
   try {
     const { email, phone } = req.body;
 
-    const profile = req.file.filename;
+    if (!req.file) {
+      return ApiResponse.badRequest("Profile image is required").send(res);
+    }
+
+    // Upload profile image to ImageKit
+    const uploadResult = await uploadFile(
+      req.file.buffer,
+      req.file.originalname
+    );
+
+    const profile = uploadResult.url;
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return ApiResponse.badRequest("Invalid email format").send(res);
@@ -163,7 +174,11 @@ const updateDetailsController = async (req, res, next) => {
     }
 
     if (req.file) {
-      updateData.profile = req.file.filename;
+      const uploadResult = await uploadFile(
+        req.file.buffer,
+        req.file.originalname
+      );
+      updateData.profile = uploadResult.url;
     }
 
     if (updateData.dob) {

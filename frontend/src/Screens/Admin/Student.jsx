@@ -415,7 +415,13 @@ const Student = () => {
                       <tr key={student._id} className="hover:bg-gray-50">
                         <td className="px-4 lg:px-6 py-4 border-b">
                           <img
-                            src={`${process.env.REACT_APP_MEDIA_LINK}/${student.profile}`}
+                            src={
+                              student.profile &&
+                              (student.profile.startsWith("http://") ||
+                                student.profile.startsWith("https://"))
+                                ? student.profile
+                                : `${process.env.REACT_APP_MEDIA_LINK}/${student.profile}`
+                            }
                             alt={`${student.firstName}'s profile`}
                             className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded-full"
                             onError={(e) => {
@@ -475,7 +481,13 @@ const Student = () => {
                   <div key={student._id} className="bg-white border border-gray-300 rounded-lg p-4 shadow-sm">
                     <div className="flex items-start gap-4 mb-4">
                       <img
-                        src={`${process.env.REACT_APP_MEDIA_LINK}/${student.profile}`}
+                        src={
+                          student.profile &&
+                          (student.profile.startsWith("http://") ||
+                            student.profile.startsWith("https://"))
+                            ? student.profile
+                            : `${process.env.REACT_APP_MEDIA_LINK}/${student.profile}`
+                        }
                         alt={`${student.firstName}'s profile`}
                         className="w-16 h-16 object-cover rounded-full flex-shrink-0"
                         onError={(e) => {
