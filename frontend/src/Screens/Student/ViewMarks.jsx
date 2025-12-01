@@ -298,37 +298,40 @@ const ViewMarks = () => {
   };
 
   return (
-    <div className="w-full mx-auto mt-10 flex justify-center items-start flex-col mb-10">
-      <div className="flex justify-between items-center w-full mb-6">
+    <div className="w-full mx-auto mt-4 sm:mt-10 flex justify-center items-start flex-col mb-10 px-4 sm:px-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center w-full mb-4 sm:mb-6 gap-4">
         <Heading title="View Marks" />
-        <div className="flex items-center gap-4">
-          <label className="text-sm font-medium text-gray-700">Class:</label>
-          <select
-            value={selectedClass || ""}
-            onChange={handleClassChange}
-            className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            {[1, 2, 3, 4, 5].map((classNum) => (
-              <option key={classNum} value={classNum}>
-                Class {classNum}
-              </option>
-            ))}
-          </select>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Class:</label>
+            <select
+              value={selectedClass || ""}
+              onChange={handleClassChange}
+              className="flex-1 sm:flex-none px-3 sm:px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
+            >
+              {[1, 2, 3, 4, 5].map((classNum) => (
+                <option key={classNum} value={classNum}>
+                  Class {classNum}
+                </option>
+              ))}
+            </select>
+          </div>
           <CustomButton
             variant="primary"
             onClick={downloadReportCard}
-            className="flex items-center gap-2"
+            className="flex items-center justify-center gap-2 w-full sm:w-auto text-sm sm:text-base"
             title="Download Report Card"
           >
             <FaFileDownload />
-            <span>Download Report Card</span>
+            <span className="hidden sm:inline">Download Report Card</span>
+            <span className="sm:hidden">Download PDF</span>
           </CustomButton>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-semibold mb-4">Mid Term Marks</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 w-full">
+        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
+          <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Mid Term Marks</h2>
           {dataLoading ? (
             <p className="text-gray-500">Loading...</p>
           ) : subjects.length > 0 ? (
@@ -338,22 +341,22 @@ const ViewMarks = () => {
                 return (
                   <div
                     key={subject._id}
-                    className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                    className="border rounded-lg p-3 sm:p-4 hover:bg-gray-50 transition-colors"
                   >
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="font-medium text-gray-800">{subject.name}</p>
-                        <p className="text-sm text-gray-500">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-gray-800 text-sm sm:text-base truncate">{subject.name}</p>
+                        <p className="text-xs sm:text-sm text-gray-500">
                           {mark ? mark.examId.name : "Mid Term"}
                         </p>
                       </div>
-                      <div className="flex items-center gap-4">
-                        <div className="text-right">
-                          <p className={`text-lg font-semibold ${mark ? "text-blue-600" : "text-gray-400"}`}>
+                      <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
+                        <div className="text-right flex-1 sm:flex-none">
+                          <p className={`text-base sm:text-lg font-semibold ${mark ? "text-blue-600" : "text-gray-400"}`}>
                             {mark ? mark.marksObtained : "to be updated"}
                           </p>
                           {mark && (
-                            <p className="text-sm text-gray-500">
+                            <p className="text-xs sm:text-sm text-gray-500">
                               out of {mark.examId.totalMarks}
                             </p>
                           )}
@@ -361,7 +364,7 @@ const ViewMarks = () => {
                         {getCBAScore(subject._id, "mid") && (
                           <button
                             onClick={() => handleViewCBA(subject._id, "mid")}
-                            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm font-medium"
+                            className="px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-xs sm:text-sm font-medium whitespace-nowrap"
                           >
                             CBA Score
                           </button>
@@ -376,8 +379,8 @@ const ViewMarks = () => {
             <p className="text-gray-500">No mid term marks available</p>
           )}
         </div>
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-semibold mb-4">End Term Marks</h2>
+        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
+          <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">End Term Marks</h2>
           {dataLoading ? (
             <p className="text-gray-500">Loading...</p>
           ) : subjects.length > 0 ? (
@@ -387,22 +390,22 @@ const ViewMarks = () => {
                 return (
                   <div
                     key={subject._id}
-                    className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                    className="border rounded-lg p-3 sm:p-4 hover:bg-gray-50 transition-colors"
                   >
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="font-medium text-gray-800">{subject.name}</p>
-                        <p className="text-sm text-gray-500">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-gray-800 text-sm sm:text-base truncate">{subject.name}</p>
+                        <p className="text-xs sm:text-sm text-gray-500">
                           {mark ? mark.examId.name : "End Term"}
                         </p>
                       </div>
-                      <div className="flex items-center gap-4">
-                        <div className="text-right">
-                          <p className={`text-lg font-semibold ${mark ? "text-blue-600" : "text-gray-400"}`}>
+                      <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
+                        <div className="text-right flex-1 sm:flex-none">
+                          <p className={`text-base sm:text-lg font-semibold ${mark ? "text-blue-600" : "text-gray-400"}`}>
                             {mark ? mark.marksObtained : "to be updated"}
                           </p>
                           {mark && (
-                            <p className="text-sm text-gray-500">
+                            <p className="text-xs sm:text-sm text-gray-500">
                               out of {mark.examId.totalMarks}
                             </p>
                           )}
@@ -410,7 +413,7 @@ const ViewMarks = () => {
                         {getCBAScore(subject._id, "end") && (
                           <button
                             onClick={() => handleViewCBA(subject._id, "end")}
-                            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm font-medium"
+                            className="px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-xs sm:text-sm font-medium whitespace-nowrap"
                           >
                             CBA Score
                           </button>
@@ -426,11 +429,11 @@ const ViewMarks = () => {
           )}
         </div>
         <div className="col-span-1 md:col-span-2">
-          <div className="bg-gradient-to-b from-blue-50 to-white rounded-2xl shadow-sm p-6 border border-blue-100">
-            <div className="flex items-center justify-between mb-6">
+          <div className="bg-gradient-to-b from-blue-50 to-white rounded-2xl shadow-sm p-4 sm:p-6 border border-blue-100">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-2">
               <Heading title="View Feedback" />
               {hasFeedback && (
-                <p className="text-xs md:text-sm text-gray-500">
+                <p className="text-xs sm:text-sm text-gray-500">
                   Updated on {new Date().toLocaleDateString()}
                 </p>
               )}
@@ -652,10 +655,10 @@ const ViewMarks = () => {
 
       {/* CBA Score Modal */}
       {showCBAModal && selectedCBAData && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold text-gray-800">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-4 sm:p-6 w-full max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4 gap-4">
+              <h2 className="text-lg sm:text-2xl font-bold text-gray-800 pr-2">
                 CBA Score - {selectedCBAData.subjectId?.name}
               </h2>
               <button
@@ -663,14 +666,14 @@ const ViewMarks = () => {
                   setShowCBAModal(false);
                   setSelectedCBAData(null);
                 }}
-                className="text-gray-500 hover:text-gray-700 text-2xl"
+                className="text-gray-500 hover:text-gray-700 text-xl sm:text-2xl flex-shrink-0"
               >
                 ×
               </button>
             </div>
 
-            <div className="mb-4 p-4 bg-blue-50 rounded-md">
-              <p className="text-sm text-gray-600">
+            <div className="mb-4 p-3 sm:p-4 bg-blue-50 rounded-md">
+              <p className="text-xs sm:text-sm text-gray-600 break-words">
                 <strong>Subject:</strong> {selectedCBAData.subjectId?.name} |{" "}
                 <strong>Exam:</strong> {selectedCBAData.examId?.name} |{" "}
                 <strong>Class:</strong> {selectedCBAData.class}
@@ -678,29 +681,29 @@ const ViewMarks = () => {
             </div>
 
             <div className="mb-6">
-              <h3 className="text-lg font-semibold mb-4 text-gray-800">
+              <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-gray-800">
                 COMMON RUBRIC FOR ALL SUBJECTS
               </h3>
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse border border-gray-300">
+              <div className="overflow-x-auto -mx-4 sm:mx-0">
+                <table className="w-full border-collapse border border-gray-300 min-w-full">
                   <thead>
                     <tr className="bg-gray-100">
-                      <th className="border border-gray-300 p-3 text-left font-semibold">
+                      <th className="border border-gray-300 p-2 sm:p-3 text-left font-semibold text-xs sm:text-sm">
                         Competency
                       </th>
-                      <th className="border border-gray-300 p-3 text-center font-semibold">
+                      <th className="border border-gray-300 p-2 sm:p-3 text-center font-semibold text-xs sm:text-sm">
                         Assessment
                       </th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr>
-                      <td className="border border-gray-300 p-3 font-medium">
+                      <td className="border border-gray-300 p-2 sm:p-3 font-medium text-xs sm:text-sm">
                         Understanding of Concepts / Skills
                       </td>
-                      <td className="border border-gray-300 p-3 text-center">
+                      <td className="border border-gray-300 p-2 sm:p-3 text-center">
                         <span
-                          className={`px-3 py-1 rounded-full text-sm font-medium ${
+                          className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${
                             selectedCBAData.competencies.understandingOfConcepts ===
                             "Meets Expectations"
                               ? "bg-green-100 text-green-800"
@@ -715,12 +718,12 @@ const ViewMarks = () => {
                       </td>
                     </tr>
                     <tr>
-                      <td className="border border-gray-300 p-3 font-medium">
+                      <td className="border border-gray-300 p-2 sm:p-3 font-medium text-xs sm:text-sm">
                         Application / Reasoning
                       </td>
-                      <td className="border border-gray-300 p-3 text-center">
+                      <td className="border border-gray-300 p-2 sm:p-3 text-center">
                         <span
-                          className={`px-3 py-1 rounded-full text-sm font-medium ${
+                          className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${
                             selectedCBAData.competencies.applicationReasoning ===
                             "Meets Expectations"
                               ? "bg-green-100 text-green-800"
@@ -735,12 +738,12 @@ const ViewMarks = () => {
                       </td>
                     </tr>
                     <tr>
-                      <td className="border border-gray-300 p-3 font-medium">
+                      <td className="border border-gray-300 p-2 sm:p-3 font-medium text-xs sm:text-sm">
                         Communication
                       </td>
-                      <td className="border border-gray-300 p-3 text-center">
+                      <td className="border border-gray-300 p-2 sm:p-3 text-center">
                         <span
-                          className={`px-3 py-1 rounded-full text-sm font-medium ${
+                          className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${
                             selectedCBAData.competencies.communication ===
                             "Meets Expectations"
                               ? "bg-green-100 text-green-800"
@@ -755,12 +758,12 @@ const ViewMarks = () => {
                       </td>
                     </tr>
                     <tr>
-                      <td className="border border-gray-300 p-3 font-medium">
+                      <td className="border border-gray-300 p-2 sm:p-3 font-medium text-xs sm:text-sm">
                         Participation, Effort & Attitude
                       </td>
-                      <td className="border border-gray-300 p-3 text-center">
+                      <td className="border border-gray-300 p-2 sm:p-3 text-center">
                         <span
-                          className={`px-3 py-1 rounded-full text-sm font-medium ${
+                          className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${
                             selectedCBAData.competencies.participationEffortAttitude ===
                             "Meets Expectations"
                               ? "bg-green-100 text-green-800"
@@ -785,7 +788,7 @@ const ViewMarks = () => {
                   setShowCBAModal(false);
                   setSelectedCBAData(null);
                 }}
-                className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
+                className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 text-sm sm:text-base w-full sm:w-auto"
               >
                 Close
               </button>

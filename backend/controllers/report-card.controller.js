@@ -182,56 +182,56 @@ const generateReportCardController = async (req, res) => {
     const darkBlue = "#003366";
     const tealBlue = "#006699";
 
-    // Header Section
-    doc.rect(0, 0, 595, 120).fill(lightBlue);
+    // Header Section - Optimized for mobile viewing
+    doc.rect(0, 0, 595, 110).fill(lightBlue);
     
     // Logo placeholder (you can add actual logo image here)
-    doc.fontSize(20)
+    doc.fontSize(18)
       .fillColor(darkBlue)
       .font("Helvetica-Bold")
-      .text("REPORT CARD", 0, 30, { align: "center", width: 595 });
+      .text("REPORT CARD", 0, 25, { align: "center", width: 595 });
     
-    doc.fontSize(14)
+    doc.fontSize(13)
       .font("Helvetica")
-      .text("Kendriya Vidyalaya", 0, 60, { align: "center", width: 595 });
+      .text("Kendriya Vidyalaya", 0, 55, { align: "center", width: 595 });
 
-    // Student Information Section
-    let yPos = 140;
-    doc.fontSize(12)
+    // Student Information Section - Optimized spacing
+    let yPos = 130;
+    doc.fontSize(11)
       .fillColor(darkBlue)
       .font("Helvetica-Bold")
       .text("Student :", 50, yPos)
       .font("Helvetica")
-      .text(`${student.firstName} ${student.middleName} ${student.lastName}`, 150, yPos);
+      .text(`${student.firstName} ${student.middleName} ${student.lastName}`, 140, yPos, { width: 400 });
     
-    yPos += 25;
+    yPos += 22;
     doc.font("Helvetica-Bold")
       .text("Level :", 50, yPos)
       .font("Helvetica")
-      .text(`Class ${student.class}`, 150, yPos);
+      .text(`Class ${student.class}`, 140, yPos);
     
-    yPos += 25;
+    yPos += 22;
     doc.font("Helvetica-Bold")
       .text("Enrollment No. :", 50, yPos)
       .font("Helvetica")
-      .text(student.enrollmentNo.toString(), 150, yPos);
+      .text(student.enrollmentNo.toString(), 140, yPos);
 
-    // Grades Table Section
-    yPos += 40;
+    // Grades Table Section - Optimized for mobile viewing
+    yPos += 35;
     const tableTop = yPos;
     const tableLeft = 50;
     const tableWidth = 495; // Adjusted for 2 columns
-    const rowHeight = 30;
-    const headerHeight = 35;
+    const rowHeight = 28; // Slightly reduced for better mobile fit
+    const headerHeight = 32;
 
     // Table Header
     doc.rect(tableLeft, tableTop, tableWidth, headerHeight).fill(tealBlue);
-    doc.fontSize(11)
+    doc.fontSize(10)
       .fillColor("white")
       .font("Helvetica-Bold")
-      .text("Subject", tableLeft + 10, tableTop + 10)
-      .text("Mid Sem", tableLeft + 250, tableTop + 10)
-      .text("End Sem", tableLeft + 370, tableTop + 10);
+      .text("Subject", tableLeft + 8, tableTop + 9)
+      .text("Mid Sem", tableLeft + 250, tableTop + 9)
+      .text("End Sem", tableLeft + 370, tableTop + 9);
 
     // Table Rows
     let currentY = tableTop + headerHeight;
@@ -244,11 +244,11 @@ const generateReportCardController = async (req, res) => {
       // Draw borders
       doc.rect(tableLeft, currentY, tableWidth, rowHeight).stroke();
       
-      // Subject name
-      doc.fontSize(10)
+      // Subject name - with better wrapping for long names
+      doc.fontSize(9)
         .fillColor(darkBlue)
         .font("Helvetica")
-        .text(subject.subjectName, tableLeft + 10, currentY + 8, { width: 230 });
+        .text(subject.subjectName, tableLeft + 8, currentY + 7, { width: 230, ellipsis: true });
       
       // Exam grades (Mid Sem and End Sem)
       const exams = [
@@ -259,47 +259,50 @@ const generateReportCardController = async (req, res) => {
       exams.forEach((exam) => {
         if (exam.data && exam.data.marksObtained !== undefined) {
           const gradeInfo = calculateGrade(exam.data.marksObtained, exam.data.totalMarks);
-          doc.text(gradeInfo.grade, exam.xPos + 10, currentY + 8);
+          doc.fontSize(10)
+            .text(gradeInfo.grade, exam.xPos + 8, currentY + 7);
         } else {
-          doc.text("-", exam.xPos + 10, currentY + 8);
+          doc.fontSize(10)
+            .text("-", exam.xPos + 8, currentY + 7);
         }
       });
       
       currentY += rowHeight;
     });
 
-    // Grading Scale Section
-    yPos = currentY + 20;
-    doc.rect(0, yPos - 10, 595, 40).fill(lightBlue);
-    doc.fontSize(11)
+    // Grading Scale Section - Optimized spacing
+    yPos = currentY + 18;
+    doc.rect(0, yPos - 8, 595, 36).fill(lightBlue);
+    doc.fontSize(10)
       .fillColor(darkBlue)
       .font("Helvetica-Bold")
       .text("GRADING SCALE :", 50, yPos)
       .font("Helvetica")
-      .text("A = 90%-100%  B = 80%-89%  C = 60%-79%  D = 0%-59%", 50, yPos + 20);
+      .text("A = 90%-100%  B = 80%-89%  C = 60%-79%  D = 0%-59%", 50, yPos + 18, { width: 495 });
 
-    // Comment Section
-    yPos += 60;
-    doc.fontSize(11)
+    // Comment Section - Optimized for mobile
+    yPos += 50;
+    doc.fontSize(10)
       .fillColor(darkBlue)
       .font("Helvetica-Bold")
       .text("Comment :", 50, yPos);
     
-    yPos += 25;
-    const commentBoxHeight = 100;
+    yPos += 22;
+    const commentBoxHeight = 90;
     doc.rect(50, yPos, 495, commentBoxHeight).stroke();
     
-    // Add feedback comments
-    let commentY = yPos + 10;
+    // Add feedback comments - Better text wrapping for mobile
+    let commentY = yPos + 8;
     feedbacks.forEach((feedback) => {
-      doc.fontSize(10)
+      doc.fontSize(9)
         .fillColor("#333333")
         .font("Helvetica")
-        .text(feedback, 60, commentY, {
-          width: 475,
+        .text(feedback, 58, commentY, {
+          width: 479,
           align: "left",
+          lineGap: 2,
         });
-      commentY += 30;
+      commentY += 28;
     });
 
     // Finalize PDF

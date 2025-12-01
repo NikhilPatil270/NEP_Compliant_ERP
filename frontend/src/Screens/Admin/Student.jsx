@@ -305,17 +305,17 @@ const Student = () => {
   };
 
   return (
-    <div className="w-full mx-auto mt-10 flex justify-center items-start flex-col mb-10">
-      <div className="flex justify-between items-center w-full">
+    <div className="w-full mx-auto mt-4 sm:mt-10 flex justify-center items-start flex-col mb-10 px-4 sm:px-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center w-full gap-4">
         <Heading title="Student Management" />
-        <CustomButton onClick={() => setShowAddForm(true)}>
+        <CustomButton onClick={() => setShowAddForm(true)} className="w-full sm:w-auto">
           <IoMdAdd className="text-2xl" />
         </CustomButton>
       </div>
 
-      <div className="my-6 mx-auto w-full">
-          <form onSubmit={searchStudents} className="flex items-center">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-[90%] mx-auto">
+      <div className="my-6 mx-auto w-full px-4">
+          <form onSubmit={searchStudents} className="flex flex-col items-center">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full max-w-6xl mx-auto">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Enrollment Number
@@ -365,11 +365,12 @@ const Student = () => {
 
             </div>
 
-            <div className="mt-6 flex justify-center w-[10%] mx-auto">
+            <div className="mt-6 flex justify-center w-full sm:w-auto">
               <CustomButton
                 type="submit"
                 disabled={dataLoading}
                 variant="primary"
+                className="w-full sm:w-auto"
               >
                 {dataLoading ? "Searching..." : "Search"}
               </CustomButton>
@@ -377,13 +378,13 @@ const Student = () => {
           </form>
 
           {!hasSearched && (
-            <div className="text-center mt-8 text-gray-600 flex flex-col items-center justify-center my-10 bg-white p-10 rounded-lg mx-auto w-[40%]">
+            <div className="text-center mt-8 text-gray-600 flex flex-col items-center justify-center my-10 bg-white p-6 sm:p-10 rounded-lg mx-auto w-full sm:w-[90%] md:w-[70%] lg:w-[40%]">
               <img
                 src="/assets/filter.svg"
                 alt="Select filters"
-                className="w-64 h-64 mb-4"
+                className="w-48 h-48 sm:w-64 sm:h-64 mb-4"
               />
-              Please select at least one filter to search students
+              <p className="text-sm sm:text-base px-4">Please select at least one filter to search students</p>
             </div>
           )}
 
@@ -392,18 +393,19 @@ const Student = () => {
           )}
 
           {students && students.length > 0 && (
-            <div className="mt-8">
-              <h2 className="text-xl font-semibold mb-4">Search Results</h2>
-              <div className="overflow-x-auto">
+            <div className="mt-6 sm:mt-8 w-full">
+              <h2 className="text-lg sm:text-xl font-semibold mb-4">Search Results</h2>
+              {/* Desktop Table View */}
+              <div className="hidden md:block overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
                 <table className="min-w-full bg-white border border-gray-300">
                   <thead>
                     <tr className="bg-gray-100">
-                      <th className="px-6 py-3 border-b text-left">Profile</th>
-                      <th className="px-6 py-3 border-b text-left">Name</th>
-                      <th className="px-6 py-3 border-b text-left">E. No</th>
-                      <th className="px-6 py-3 border-b text-left">Class</th>
-                      <th className="px-6 py-3 border-b text-left">Email</th>
-                      <th className="px-6 py-3 border-b text-center">
+                      <th className="px-4 lg:px-6 py-3 border-b text-left text-sm">Profile</th>
+                      <th className="px-4 lg:px-6 py-3 border-b text-left text-sm">Name</th>
+                      <th className="px-4 lg:px-6 py-3 border-b text-left text-sm">E. No</th>
+                      <th className="px-4 lg:px-6 py-3 border-b text-left text-sm">Class</th>
+                      <th className="px-4 lg:px-6 py-3 border-b text-left text-sm">Email</th>
+                      <th className="px-4 lg:px-6 py-3 border-b text-center text-sm">
                         Actions
                       </th>
                     </tr>
@@ -411,30 +413,30 @@ const Student = () => {
                   <tbody>
                     {students.map((student) => (
                       <tr key={student._id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 border-b">
+                        <td className="px-4 lg:px-6 py-4 border-b">
                           <img
                             src={`${process.env.REACT_APP_MEDIA_LINK}/${student.profile}`}
                             alt={`${student.firstName}'s profile`}
-                            className="w-12 h-12 object-cover rounded-full"
+                            className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded-full"
                             onError={(e) => {
                               e.target.src =
                                 "https://images.unsplash.com/photo-1744315900478-fa44dc6a4e89?q=80&w=3087&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
                             }}
                           />
                         </td>
-                        <td className="px-6 py-4 border-b">
+                        <td className="px-4 lg:px-6 py-4 border-b text-sm">
                           {student.firstName} {student.middleName}{" "}
                           {student.lastName}
                         </td>
-                        <td className="px-6 py-4 border-b">
+                        <td className="px-4 lg:px-6 py-4 border-b text-sm">
                           {student.enrollmentNo}
                         </td>
-                        <td className="px-6 py-4 border-b">
+                        <td className="px-4 lg:px-6 py-4 border-b text-sm">
                           {student.class}
                         </td>
-                        <td className="px-6 py-4 border-b">{student.email}</td>
-                        <td className="px-6 py-4 border-b text-center">
-                          <div className="flex justify-center gap-2">
+                        <td className="px-4 lg:px-6 py-4 border-b text-sm truncate max-w-xs">{student.email}</td>
+                        <td className="px-4 lg:px-6 py-4 border-b text-center">
+                          <div className="flex justify-center gap-1 sm:gap-2">
                             <CustomButton
                               variant="secondary"
                               className="!p-2"
@@ -466,20 +468,73 @@ const Student = () => {
                   </tbody>
                 </table>
               </div>
+              
+              {/* Mobile Card View */}
+              <div className="md:hidden space-y-4">
+                {students.map((student) => (
+                  <div key={student._id} className="bg-white border border-gray-300 rounded-lg p-4 shadow-sm">
+                    <div className="flex items-start gap-4 mb-4">
+                      <img
+                        src={`${process.env.REACT_APP_MEDIA_LINK}/${student.profile}`}
+                        alt={`${student.firstName}'s profile`}
+                        className="w-16 h-16 object-cover rounded-full flex-shrink-0"
+                        onError={(e) => {
+                          e.target.src =
+                            "https://images.unsplash.com/photo-1744315900478-fa44dc6a4e89?q=80&w=3087&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
+                        }}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-gray-900 truncate">
+                          {student.firstName} {student.middleName} {student.lastName}
+                        </h3>
+                        <p className="text-sm text-gray-600">Enrollment: {student.enrollmentNo}</p>
+                        <p className="text-sm text-gray-600">Class: {student.class}</p>
+                        <p className="text-sm text-gray-600 truncate">Email: {student.email}</p>
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-2 pt-4 border-t">
+                      <CustomButton
+                        variant="secondary"
+                        className="!p-2"
+                        onClick={() => editStudentHandler(student)}
+                        title="Edit Student"
+                      >
+                        <MdEdit />
+                      </CustomButton>
+                      <CustomButton
+                        variant="primary"
+                        className="!p-2"
+                        onClick={() => downloadReportCard(student)}
+                        title="Download Report Card"
+                      >
+                        <FaFileDownload />
+                      </CustomButton>
+                      <CustomButton
+                        variant="danger"
+                        className="!p-2"
+                        onClick={() => deleteStudentHandler(student._id)}
+                        title="Delete Student"
+                      >
+                        <MdOutlineDelete />
+                      </CustomButton>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
 
       {showAddForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 w-[90%] max-w-4xl max-h-[90vh] overflow-y-auto relative">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-4 sm:p-6 lg:p-8 w-full max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto relative">
             <button
               onClick={resetForm}
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100 transition-colors"
+              className="absolute top-2 right-2 sm:top-4 sm:right-4 text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100 transition-colors z-10"
             >
-              <IoMdClose className="text-2xl" />
+              <IoMdClose className="text-xl sm:text-2xl" />
             </button>
-            <h2 className="text-2xl font-semibold mb-6">
+            <h2 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6 pr-8">
               {isEditing ? "Edit Student" : "Add New Student"}
             </h2>
             <form
@@ -488,7 +543,7 @@ const Student = () => {
                 addStudentHandler();
               }}
             >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     First Name
@@ -716,10 +771,10 @@ const Student = () => {
                 </div>
 
                 <div className="md:col-span-2">
-                  <h3 className="text-lg font-semibold mb-4">
+                  <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">
                     Emergency Contact
                   </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Name
@@ -771,26 +826,27 @@ const Student = () => {
                 </div>
               </div>
 
-              <div className="mt-8 flex justify-between items-center gap-4">
-                <div>
-                  <p className="text-sm">
+              <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4">
+                <div className="order-2 sm:order-1">
+                  <p className="text-xs sm:text-sm">
                     Default login will be{" "}
-                    <span className="font-bold">
+                    <span className="font-bold break-all">
                       {formData.enrollmentNo || "enrollment_no"}@gmail.com
                     </span>{" "}
                     and password will be{" "}
                     <span className="font-bold">student123</span>
                   </p>
                 </div>
-                <div className="flex gap-4">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 order-1 sm:order-2 w-full sm:w-auto">
                   <CustomButton
                     type="button"
                     variant="secondary"
                     onClick={resetForm}
+                    className="w-full sm:w-auto"
                   >
                     Cancel
                   </CustomButton>
-                  <CustomButton type="submit" variant="primary">
+                  <CustomButton type="submit" variant="primary" className="w-full sm:w-auto">
                     {isEditing ? "Update Student" : "Add Student"}
                   </CustomButton>
                 </div>

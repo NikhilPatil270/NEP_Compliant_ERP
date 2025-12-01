@@ -13,6 +13,7 @@ import axiosWrapper from "../../utils/AxiosWrapper";
 import Profile from "./Profile";
 import Exam from "../Exam";
 import { useNavigate, useLocation } from "react-router-dom";
+import { IoMdArrowDropdown } from "react-icons/io";
 
 const MENU_ITEMS = [
   { id: "home", label: "Home", component: Profile },
@@ -112,8 +113,29 @@ const Home = () => {
   return (
     <>
       <Navbar />
-      <div className="max-w-7xl mx-auto">
-        <ul className="flex justify-evenly items-center gap-10 w-full mx-auto my-8">
+      <div className="max-w-7xl mx-auto px-4">
+        {/* Mobile Dropdown Menu */}
+        <div className="md:hidden my-4">
+          <div className="relative">
+            <select
+              value={selectedMenu}
+              onChange={(e) => handleMenuClick(e.target.value)}
+              className="w-full appearance-none bg-white border-2 border-blue-500 rounded-md px-4 py-3 pr-10 text-base font-medium text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer"
+            >
+              {MENU_ITEMS.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.label}
+                </option>
+              ))}
+            </select>
+            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+              <IoMdArrowDropdown className="text-2xl text-blue-500" />
+            </div>
+          </div>
+        </div>
+
+        {/* Desktop Tab Menu */}
+        <ul className="hidden md:flex justify-evenly items-center gap-4 lg:gap-10 w-full mx-auto my-8">
           {MENU_ITEMS.map((item) => (
             <li
               key={item.id}
