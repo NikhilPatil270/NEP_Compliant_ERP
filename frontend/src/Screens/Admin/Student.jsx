@@ -2,12 +2,14 @@ import React, { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { MdOutlineDelete, MdEdit } from "react-icons/md";
 import { IoMdAdd, IoMdClose } from "react-icons/io";
+import { FaFileDownload } from "react-icons/fa";
 import Heading from "../../components/Heading";
 import DeleteConfirm from "../../components/DeleteConfirm";
 import axiosWrapper from "../../utils/AxiosWrapper";
 import CustomButton from "../../components/CustomButton";
 import NoData from "../../components/NoData";
 import { CgDanger } from "react-icons/cg";
+import { baseApiURL } from "../../baseUrl";
 
 const Student = () => {
   const [searchParams, setSearchParams] = useState({
@@ -185,6 +187,37 @@ const Student = () => {
   const deleteStudentHandler = (id) => {
     setIsDeleteConfirmOpen(true);
     setSelectedStudentId(id);
+  };
+
+  const downloadReportCard = async (student) => {
+    try {
+      toast.loading("Generating report card...");
+      const response = await axiosWrapper.get(
+        `/student/report-card?studentId=${student._id}&class=${student.class}`,
+        {
+          headers: { Authorization: `Bearer ${userToken}` },
+          responseType: "blob",
+        }
+      );
+
+      toast.dismiss();
+      
+      // Create a blob from the PDF data
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `ReportCard_${student.enrollmentNo}_${student.firstName}_${student.lastName}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast.success("Report card downloaded successfully!");
+    } catch (error) {
+      toast.dismiss();
+      toast.error(error.response?.data?.message || "Error generating report card");
+    }
   };
 
   const editStudentHandler = (student) => {
@@ -406,13 +439,23 @@ const Student = () => {
                               variant="secondary"
                               className="!p-2"
                               onClick={() => editStudentHandler(student)}
+                              title="Edit Student"
                             >
                               <MdEdit />
+                            </CustomButton>
+                            <CustomButton
+                              variant="primary"
+                              className="!p-2"
+                              onClick={() => downloadReportCard(student)}
+                              title="Download Report Card"
+                            >
+                              <FaFileDownload />
                             </CustomButton>
                             <CustomButton
                               variant="danger"
                               className="!p-2"
                               onClick={() => deleteStudentHandler(student._id)}
+                              title="Delete Student"
                             >
                               <MdOutlineDelete />
                             </CustomButton>

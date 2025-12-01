@@ -14,6 +14,7 @@ const {
 } = require("../../controllers/details/student-details.controller");
 const upload = require("../../middlewares/multer.middleware");
 const auth = require("../../middlewares/auth.middleware");
+const { generateReportCardController } = require("../../controllers/report-card.controller");
 
 router.post("/register", upload.single("file"), registerStudentController);
 router.post("/login", loginStudentController);
@@ -26,5 +27,6 @@ router.post("/forget-password", sendForgetPasswordEmail);
 router.post("/update-password/:resetId", updatePasswordHandler);
 router.post("/change-password", auth, updateLoggedInPasswordController);
 router.post("/search", auth, searchStudentsController);
+router.get("/report-card", auth, generateReportCardController);
 
 module.exports = router;

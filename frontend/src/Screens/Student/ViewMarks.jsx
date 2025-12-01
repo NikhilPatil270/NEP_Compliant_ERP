@@ -3,6 +3,8 @@ import { toast } from "react-hot-toast";
 import axiosWrapper from "../../utils/AxiosWrapper";
 import Heading from "../../components/Heading";
 import { useSelector } from "react-redux";
+import { FaFileDownload } from "react-icons/fa";
+import CustomButton from "../../components/CustomButton";
 
 const COMPETENCY_LABELS = {
   understandingOfConcepts: "Concept Mastery",
@@ -259,6 +261,42 @@ const ViewMarks = () => {
   const hasFeedback =
     feedbackData && feedbackData.subjectSummaries.length > 0;
 
+  const downloadReportCard = async () => {
+    try {
+      if (!userData?._id || !selectedClass) {
+        toast.error("Student information not available");
+        return;
+      }
+      
+      toast.loading("Generating report card...");
+      const response = await axiosWrapper.get(
+        `/student/report-card?studentId=${userData._id}&class=${selectedClass}`,
+        {
+          headers: { Authorization: `Bearer ${userToken}` },
+          responseType: "blob",
+        }
+      );
+
+      toast.dismiss();
+      
+      // Create a blob from the PDF data
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `ReportCard_${userData.enrollmentNo}_${userData.firstName}_${userData.lastName}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast.success("Report card downloaded successfully!");
+    } catch (error) {
+      toast.dismiss();
+      toast.error(error.response?.data?.message || "Error generating report card");
+    }
+  };
+
   return (
     <div className="w-full mx-auto mt-10 flex justify-center items-start flex-col mb-10">
       <div className="flex justify-between items-center w-full mb-6">
@@ -276,6 +314,15 @@ const ViewMarks = () => {
               </option>
             ))}
           </select>
+          <CustomButton
+            variant="primary"
+            onClick={downloadReportCard}
+            className="flex items-center gap-2"
+            title="Download Report Card"
+          >
+            <FaFileDownload />
+            <span>Download Report Card</span>
+          </CustomButton>
         </div>
       </div>
 
